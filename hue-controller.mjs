@@ -185,7 +185,7 @@ export default class HueController extends events.EventEmitter {
             ANIMATION_PRI_HIGH,
             () => this.setXY(red, TRANSITION_INSTANT),
             () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
-            5000,
+            10000,
             800
         );
     }
@@ -199,7 +199,7 @@ export default class HueController extends events.EventEmitter {
             () => this.setXY(red, TRANSITION_INSTANT),
             () => this.setXY(BASE_COLOR, TRANSITION_INSTANT),
             20,
-            200
+            400
         );
     }
 
