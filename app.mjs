@@ -26,10 +26,15 @@ function registerHandlers() {
                 // fires at 1-4.
                 break;
             case "ChampionKill":
-                log.info("Game", `champion killed.`);
+                log.info("Game", `this summoner killed.`);
                 // todo: lights
                 break;
         }
+    });
+
+    tft.on("championDeathEvent", summonerName => {
+        log.info("Game", `other summoner killed: ${summonerName}`);
+        // todo: lights
     });
 
     tft.on("gameTime", gameTime => {

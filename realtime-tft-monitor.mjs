@@ -34,6 +34,7 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
         this.hasConnectedBefore = false;
         this.playerLastLevel = 0;
         this.playerLastHealth = 0;
+        this.deadSummoners = [];
     }
 
     async retrieveCurrentGameState() {
@@ -93,6 +94,17 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                 if(health !== this.playerLastHealth && health < TFT_MAX_HEALTH) {
                     this.emit("playerHealthChange", new PlayerHealthChange(this.playerLastHealth, health));
                     this.playerLastHealth = health;
+                }
+
+                const allPlayers = currentGameInfo.allPlayers;
+
+                for(let player of allPlayers) {
+                    const summonerName = player.summonerName;
+
+                    if(player.isDead && !this.deadSummoners.includes(summonerName) && summonerName != activePlayer.summonerName) {
+                        this.deadSummoners.push(summonerName);
+                        this.emit("championDeathEvent", summonerName);
+                    }
                 }
             }
 
