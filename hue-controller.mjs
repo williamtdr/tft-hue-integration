@@ -127,17 +127,30 @@ export default class HueController extends events.EventEmitter {
             });
     }
 
+    setBri(brightness, transition = TRANSITION_SLOW) {
+        if(!this.authenticatedApi) {
+            // we're still connecting...
+            return;
+        }
+
+        let state = new GroupLightState()
+            .incrementBrightness(brightness)
+            .transitiontime(transition);
+
+        return this.authenticatedApi.groups.setGroupState(this.lightGroup.id, state);
+    }
+
     setXY(xy, transition = TRANSITION_SLOW) {
         if(!this.authenticatedApi) {
             // we're still connecting...
             return;
         }
 
-        let alertState = new GroupLightState()
+        let state = new GroupLightState()
             .xy(xy[0], xy[1])
             .transitiontime(transition);
 
-        return this.authenticatedApi.groups.setGroupState(this.lightGroup.id, alertState);
+        return this.authenticatedApi.groups.setGroupState(this.lightGroup.id, state);
     }
 
     async softHello() {
@@ -183,9 +196,9 @@ export default class HueController extends events.EventEmitter {
         await this.animations.run(
             "ownDeath",
             ANIMATION_PRI_HIGH,
-            () => this.setXY(red, TRANSITION_INSTANT),
+            () => this.setXY(red, TRANSITION_MIDDLE),
             () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
-            10000,
+            15000,
             800
         );
     }
@@ -196,10 +209,10 @@ export default class HueController extends events.EventEmitter {
         await this.animations.run(
             "ow",
             ANIMATION_PRI_LOW,
-            () => this.setXY(red, TRANSITION_INSTANT),
-            () => this.setXY(BASE_COLOR, TRANSITION_INSTANT),
-            20,
-            400
+            () => this.setBri(-150, TRANSITION_V_FAST),
+            () => this.setBri(150, TRANSITION_V_FAST),
+            50,
+            200
         );
     }
 
@@ -234,7 +247,7 @@ export default class HueController extends events.EventEmitter {
 
         await this.animations.run(
             "topFour",
-            ANIMATION_PRI_MED,
+            ANIMATION_PRI_HIGH,
             () => this.setXY(orange, TRANSITION_MIDDLE),
             () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
             4000,
