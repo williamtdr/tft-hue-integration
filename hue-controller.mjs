@@ -2,6 +2,7 @@ import nodeHue from 'node-hue-api';
 import fs from 'fs';
 import events from 'events';
 import log from './util/log.mjs';
+import {ANIMATION_PRI_HIGH, ANIMATION_PRI_LOW, AnimationManager} from './manager/animation.mjs';
 
 const LightState = nodeHue.v3.lightStates.LightState;
 const GroupLightState = nodeHue.v3.lightStates.GroupLightState;
@@ -19,6 +20,9 @@ const TRANSITION_FAST = 2;
 const TRANSITION_MIDDLE = 4;
 const TRANSITION_SLOW = 8;
 
+// a nice warm white
+const BASE_COLOR = [0.4578, 0.41];
+
 export default class HueController extends events.EventEmitter {
     constructor() {
         super();
@@ -27,7 +31,7 @@ export default class HueController extends events.EventEmitter {
         this.lightsInitialState = [];
         this.restoredDefaultState = false;
         this.lightGroup = null;
-        this.isAnimating = false;
+        this.animations = new AnimationManager();
     }
 
     log(msg) {
@@ -103,18 +107,6 @@ export default class HueController extends events.EventEmitter {
         this.log(`Connected to Hue Bridge: ${bridgeConfig.name} :: ${bridgeConfig.ipaddress}`);
 
         this.storeInitialState();
-
-        setTimeout(() => {
-            this.pulseBeforeRound();
-        }, 2000);
-
-        setTimeout(() => {
-            this.pulseBeforeRound();
-        }, 3000);
-
-        setTimeout(() => {
-            this.pulseBeforeRound();
-        }, 4000);
     }
 
     storeInitialState() {
@@ -135,28 +127,25 @@ export default class HueController extends events.EventEmitter {
             });
     }
 
-    setXY(x, y, transition = TRANSITION_SLOW) {
+    setXY(xy, transition = TRANSITION_SLOW) {
         let alertState = new GroupLightState()
-            .xy(x, y)
+            .xy(xy[0], xy[1])
             .transitiontime(transition);
 
         return this.authenticatedApi.groups.setGroupState(this.lightGroup.id, alertState);
     }
 
     async softHello() {
-        if(this.isAnimating)
-            return;
-
-        this.isAnimating = true;
-
-        const softBlue = [0.2976, 0.2348];
-        await this.setXY(softBlue[0], softBlue[1], TRANSITION_SLOW);
-
         const time = 12000 + 10000 + 3000; // 12s locked out of center, 10s choosing champ, 3s transition
-        setTimeout(async () => {
-            await this.setXY(0.4578, 0.41, TRANSITION_SLOW);
-        }, time);
-        setTimeout(() => this.isAnimating = false, time + 1000);
+
+        await this.animations.lock(
+            "softHello",
+            ANIMATION_PRI_HIGH,
+            () => this.setXY(softBlue, TRANSITION_SLOW),
+            () => this.setXY(BASE_COLOR, TRANSITION_SLOW),
+            time,
+            1000
+        );
     }
 
     async pulseBeforeRound() {
@@ -173,7 +162,7 @@ export default class HueController extends events.EventEmitter {
 
         setTimeout(async () => {
             let alertState = new GroupLightState()
-                .xy(0.4578, 0.41)
+                .xy(BASE_COLOR)
                 .alertNone()
                 .transitiontime(TRANSITION_MIDDLE);
 
@@ -183,56 +172,55 @@ export default class HueController extends events.EventEmitter {
     }
 
     async ownDeath() {
-        if(this.isAnimating)
-            return;
-
-        this.isAnimating = true;
-
         const red = [0.5081, 0.2384];
-        await this.setXY(red[0], red[1], TRANSITION_INSTANT);
 
-        setTimeout(async () => {
-            await this.setXY(0.4578, 0.41, TRANSITION_MIDDLE);
-        }, 5000);
-        setTimeout(() => this.isAnimating = false, 6000);
+        await this.animations.lock(
+            "ownDeath",
+            ANIMATION_PRI_HIGH,
+            () => this.setXY(red, TRANSITION_INSTANT),
+            () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
+            5000,
+            800
+        );
     }
 
     async ow() {
-        if(this.isAnimating)
-            return;
-
         const red = [0.479, 0.2748];
-        await this.setXY(red[0], red[1], TRANSITION_INSTANT);
 
-        setTimeout(async () => {
-            await this.setXY(0.4578, 0.41, TRANSITION_INSTANT);
-        }, 20);
+        await this.animations.lock(
+            "ow",
+            ANIMATION_PRI_LOW,
+            () => this.setXY(red, TRANSITION_INSTANT),
+            () => this.setXY(BASE_COLOR, TRANSITION_INSTANT),
+            20,
+            200
+        );
     }
 
     async levelUp() {
-        if(this.isAnimating)
-            return;
-
         const blue = [0.292, 0.2251];
-        await this.setXY(blue[0], blue[1], TRANSITION_FAST);
 
-        setTimeout(async () => {
-            await this.setXY(0.4578, 0.41, TRANSITION_FAST);
-        }, 1500);
+        await this.animations.lock(
+            "levelUp",
+            ANIMATION_PRI_MED,
+            () => this.setXY(blue, TRANSITION_FAST),
+            () => this.setXY(BASE_COLOR, TRANSITION_FAST),
+            1500,
+            400
+        );
     }
 
     async otherPlayerDied() {
-        if(this.isAnimating)
-            return;
-
-        this.isAnimating = true;
         const green = [0.311, 0.4989];
-        await this.setXY(green[0], green[1], TRANSITION_MIDDLE);
 
-        setTimeout(async () => {
-            await this.setXY(0.4578, 0.41, TRANSITION_MIDDLE);
-        }, 4000);
-        setTimeout(() => this.isAnimating = false, 5000);
+        await this.animations.lock(
+            "otherPlayerDied",
+            ANIMATION_PRI_MED,
+            () => this.setXY(green, TRANSITION_MIDDLE),
+            () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
+            4000,
+            800
+        );
     }
 
     restoreState() {

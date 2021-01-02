@@ -3,7 +3,7 @@ import AbortController from 'abort-controller';
 import events from 'events';
 import RiotEvent from './model/RiotEvent.mjs';
 import PlayerLevelUp from './model/PlayerLevelUp.mjs';
-import PlayerHealthChange from './model/playerHealthChange.mjs';
+import PlayerHealthChange from './model/PlayerHealthChange.mjs';
 import {suppressTlsWarning} from './util/supress-tls-warning.mjs';
 
 // ignore self signed cert errors, the riot client doesn't sign its
@@ -39,9 +39,7 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
 
     async retrieveCurrentGameState() {
         const controller = new AbortController();
-        const timeout = setTimeout(() => {
-            controller.abort();
-        }, TIMEOUT_CLIENT_API_MS);
+        const requestTimeout = setTimeout(() => controller.abort(), TIMEOUT_CLIENT_API_MS);
 
         try {
             const currentGameInfo = await fetch(`${LOCAL_CLIENT_API_BASE}liveclientdata/allgamedata`, { signal: controller.signal })
@@ -85,9 +83,8 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                         this.pastGameEvents.push(identifier);
                         
                         // don't emit this event on the own player's death.
-                        if(riotEvent.eventName == "ChampionKill" && event.VictimName !== summonerName) {
+                        if(riotEvent.eventName === "ChampionKill" && event.VictimName !== summonerName)
                             this.emit('RiotEvent', riotEvent);
-                        }
                     }
                 }
 
@@ -104,7 +101,7 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                 for(let player of allPlayers) {
                     const summonerName = player.summonerName;
 
-                    if(player.isDead && !this.deadSummoners.includes(summonerName) && summonerName != activePlayer.summonerName) {
+                    if(player.isDead && !this.deadSummoners.includes(summonerName) && summonerName !== activePlayer.summonerName) {
                         this.deadSummoners.push(summonerName);
                         this.emit("championDeathEvent", summonerName);
                     }
@@ -129,10 +126,10 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                 // next one quickly
                 console.log(error);
 
-                this.refreshGameStateId = setTimeout(() => this.retrieveCurrentGameState(), GAME_INFO_WAITING_MS);
+                this.refreshGameStateId = setTimeout(() => this.retrieveCurrentGameState(), GAME_INFO_REALTIME_MS);
             }
         } finally {
-            clearTimeout(timeout);
+            clearTimeout(requestTimeout);
         }
     }
 }
