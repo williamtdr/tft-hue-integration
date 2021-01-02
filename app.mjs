@@ -10,6 +10,8 @@ function registerHandlers() {
     let otherPlayersHaveDied = 0;
     let playerisAlive = true;
     let gameTime = 0;
+    let lastOw = 0;
+    let numOw = 0;
 
     log.info("Game", `waiting for connection.`);
 
@@ -82,7 +84,18 @@ function registerHandlers() {
             return; // we're just loading in
 
         log.info("Game", `player has new health value: ${playerHealthChange.oldHealth} -> ${playerHealthChange.newHealth}`);
-        hue.ow();
+        
+        if((Date.now() - lastOw) > 5000) {
+            // reset counter when we haven't taken dmg in a bit
+            numOw = 0;
+        }
+
+        // only play ow animation up to twice at a time
+        if((Date.now() - lastOw) < 1000 && numOw < 2) {
+            lastOw = Date.now();
+            numOw++;
+            hue.ow();
+        }
     });
 
     tft.on("expired", () => {
