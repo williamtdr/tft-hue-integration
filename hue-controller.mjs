@@ -136,6 +136,7 @@ export default class HueController extends events.EventEmitter {
     }
 
     async softHello() {
+        const softBlue = [0.2976, 0.2348];
         const time = 12000 + 10000 + 3000; // 12s locked out of center, 10s choosing champ, 3s transition
 
         await this.animations.lock(
@@ -217,6 +218,19 @@ export default class HueController extends events.EventEmitter {
             "otherPlayerDied",
             ANIMATION_PRI_MED,
             () => this.setXY(green, TRANSITION_MIDDLE),
+            () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
+            4000,
+            800
+        );
+    }
+
+    async topFour() {
+        const orange = [0.5858, 0.3708];
+
+        await this.animations.lock(
+            "topFour",
+            ANIMATION_PRI_MED,
+            () => this.setXY(orange, TRANSITION_MIDDLE),
             () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
             4000,
             800

@@ -7,6 +7,8 @@ let hue = new HueController();
 
 function registerHandlers() {
     let summonerName = null;
+    let otherPlayersHaveDied = 0;
+    let playerisAlive = true;
 
     log.info("Game", `waiting for connection.`);
 
@@ -33,6 +35,7 @@ function registerHandlers() {
                 break;
             case "ChampionKill":
                 log.info("Game", `this summoner killed.`);
+                playerisAlive = false;
                 hue.ownDeath();
                 break;
             case "GameEnd":
@@ -43,15 +46,22 @@ function registerHandlers() {
 
     tft.on("championDeathEvent", summonerName => {
         log.info("Game", `other summoner killed: ${summonerName}`);
-        hue.otherPlayerDied();
+        otherPlayersHaveDied++;
+
+        // on top four or top six, play special animation
+        if((otherPlayersHaveDied === 4 || otherPlayersHaveDied === 6) && playerisAlive) {
+            // give a small delay in case game sends own death event right after
+            setTimeout(() => playerisAlive ? hue.topFour() : null, 200);
+        } else
+            hue.otherPlayerDied();
     });
 
     tft.on("gameTime", gameTime => {
         // todo
         //log.info("Game", "game time: " + gameTime);
 
-        if(gameTime > 27 && gameTime < 28)
-            return hue.pulseBeforeRound();
+        // if(gameTime > 27 && gameTime < 28)
+        //     return hue.pulseBeforeRound();
     });
 
     tft.on("playerLevelUp", playerLevelUp => {
