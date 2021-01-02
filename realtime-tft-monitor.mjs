@@ -82,8 +82,11 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                     if(!this.pastGameEvents.includes(identifier)) {
                         this.pastGameEvents.push(identifier);
                         
-                        // don't emit this event on the own player's death.
-                        if(!(riotEvent.eventName === "ChampionKill" && event.VictimName === summonerName))
+                        // only emit this event on the own player's death.
+                        if(riotEvent.eventName === "ChampionKill") {
+                            if(event.VictimName === summonerName)
+                                this.emit('RiotEvent', riotEvent);
+                        } else
                             this.emit('RiotEvent', riotEvent);
                     }
                 }

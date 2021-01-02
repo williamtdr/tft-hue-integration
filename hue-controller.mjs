@@ -180,7 +180,7 @@ export default class HueController extends events.EventEmitter {
     async ownDeath() {
         const red = [0.5081, 0.2384];
 
-        await this.animations.lock(
+        await this.animations.run(
             "ownDeath",
             ANIMATION_PRI_HIGH,
             () => this.setXY(red, TRANSITION_INSTANT),
@@ -193,7 +193,7 @@ export default class HueController extends events.EventEmitter {
     async ow() {
         const red = [0.479, 0.2748];
 
-        await this.animations.lock(
+        await this.animations.run(
             "ow",
             ANIMATION_PRI_LOW,
             () => this.setXY(red, TRANSITION_INSTANT),
@@ -206,7 +206,7 @@ export default class HueController extends events.EventEmitter {
     async levelUp() {
         const blue = [0.292, 0.2251];
 
-        await this.animations.lock(
+        await this.animations.run(
             "levelUp",
             ANIMATION_PRI_MED,
             () => this.setXY(blue, TRANSITION_FAST),
@@ -219,7 +219,7 @@ export default class HueController extends events.EventEmitter {
     async otherPlayerDied() {
         const green = [0.311, 0.4989];
 
-        await this.animations.lock(
+        await this.animations.run(
             "otherPlayerDied",
             ANIMATION_PRI_MED,
             () => this.setXY(green, TRANSITION_MIDDLE),
@@ -232,7 +232,7 @@ export default class HueController extends events.EventEmitter {
     async topFour() {
         const orange = [0.5858, 0.3708];
 
-        await this.animations.lock(
+        await this.animations.run(
             "topFour",
             ANIMATION_PRI_MED,
             () => this.setXY(orange, TRANSITION_MIDDLE),

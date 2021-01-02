@@ -9,6 +9,7 @@ function registerHandlers() {
     let summonerName = null;
     let otherPlayersHaveDied = 0;
     let playerisAlive = true;
+    let gameTime = 0;
 
     log.info("Game", `waiting for connection.`);
 
@@ -27,7 +28,10 @@ function registerHandlers() {
         switch(riotEvent.eventName) {
             case "GameStart":
                 log.info("Game", `game started at: ${riotEvent.eventTime}`);
-                hue.softHello();
+                
+                // only play animation if this happened recently
+                if(gameTime < parseFloat(riotEvent.eventTime) + 5)
+                    hue.softHello();
                 break;
             case "MinionsSpawning":
                 log.info("Game", `1-4 reached at: ${riotEvent.eventTime}`);
@@ -56,9 +60,10 @@ function registerHandlers() {
             hue.otherPlayerDied();
     });
 
-    tft.on("gameTime", gameTime => {
+    tft.on("gameTime", newGameTime => {
         // todo
         //log.info("Game", "game time: " + gameTime);
+        gameTime = newGameTime;
 
         // if(gameTime > 27 && gameTime < 28)
         //     return hue.pulseBeforeRound();
