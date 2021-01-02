@@ -6,11 +6,18 @@ let tft = new RealtimeTftMonitor();
 let hue = new HueController();
 
 function registerHandlers() {
+    let summonerName = null;
+
     log.info("Game", `waiting for connection.`);
 
     tft.on("sessionStart", () => {
         // todo
         log.info("Game", `session started.`);
+    });
+
+    tft.on("summonerName", newSummonerName => {
+        summonerName = newSummonerName;
+        log.info("Game", `playing as: ${summonerName}`);
     });
 
     tft.on("RiotEvent", riotEvent => {
@@ -28,6 +35,9 @@ function registerHandlers() {
             case "ChampionKill":
                 log.info("Game", `this summoner killed.`);
                 // todo: lights
+                break;
+            case "GameEnd":
+                // do we care abt this?
                 break;
         }
     });

@@ -53,21 +53,26 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                 let isFirstSession = !this.hasConnectedBefore;
                 this.hasConnectedBefore = true;
 
-                if(isFirstSession)
-                    this.emit("sessionStart");
-
+                const activePlayer = currentGameInfo.activePlayer;
+                const summonerName = activePlayer.summonerName;
+                const level = activePlayer.level;
+                const health = activePlayer.championStats.currentHealth;
                 const gameTime = currentGameInfo.gameData.gameTime;
-
-                this.emit("gameTime", gameTime);
-
                 const mapName = currentGameInfo.gameData.mapName;
                 // todo: i'm not sure what this means. it doesn't seem to change as you move
                 // between boards? maybe the whole map is treated as one object? "Map22"
-
                 const mapNumber = currentGameInfo.gameData.mapNumber;
                 // 22, see above note
+                const allPlayers = currentGameInfo.allPlayers;
 
                 const events = currentGameInfo.events.Events;
+
+                if(isFirstSession) {
+                    this.emit("sessionStart");
+                    this.emit("summonerName", summonerName);
+                }
+
+                this.emit("gameTime", gameTime);
 
                 for(let event of events) {
                     const riotEvent = new RiotEvent(event.EventID, event.EventName, event.EventTime);
@@ -78,13 +83,13 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
 
                     if(!this.pastGameEvents.includes(identifier)) {
                         this.pastGameEvents.push(identifier);
-                        this.emit('RiotEvent', riotEvent);
+                        
+                        // don't emit this event on the own player's death.
+                        if(riotEvent.eventName == "ChampionKill" && event.VictimName !== summonerName) {
+                            this.emit('RiotEvent', riotEvent);
+                        }
                     }
                 }
-
-                const activePlayer = currentGameInfo.activePlayer;
-                const level = activePlayer.level;
-                const health = activePlayer.championStats.currentHealth;
 
                 if(level !== this.playerLastLevel && level > 1) {
                     this.emit("playerLevelUp", new PlayerLevelUp(this.playerLastLevel, level));
@@ -95,8 +100,6 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                     this.emit("playerHealthChange", new PlayerHealthChange(this.playerLastHealth, health));
                     this.playerLastHealth = health;
                 }
-
-                const allPlayers = currentGameInfo.allPlayers;
 
                 for(let player of allPlayers) {
                     const summonerName = player.summonerName;
