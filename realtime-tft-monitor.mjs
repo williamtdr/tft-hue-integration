@@ -57,7 +57,7 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
 
                 const gameTime = currentGameInfo.gameData.gameTime;
 
-                // todo: make our own events based on game timer
+                this.emit("gameTime", gameTime);
 
                 const mapName = currentGameInfo.gameData.mapName;
                 // todo: i'm not sure what this means. it doesn't seem to change as you move
@@ -69,7 +69,7 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                 const events = currentGameInfo.events.Events;
 
                 for(let event of events) {
-                    const riotEvent = new RiotEvent(event.EventID, event.EventName, event.eventTime);
+                    const riotEvent = new RiotEvent(event.EventID, event.EventName, event.EventTime);
 
                     // mash everything into a string so we can log it to a list of
                     // things that have happened, and if something new happens, emit an event
@@ -83,16 +83,16 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
 
                 const activePlayer = currentGameInfo.activePlayer;
                 const level = activePlayer.level;
-                const health = activePlayer.level;
+                const health = activePlayer.championStats.currentHealth;
 
                 if(level !== this.playerLastLevel && level > 1) {
                     this.emit("playerLevelUp", new PlayerLevelUp(this.playerLastLevel, level));
                     this.playerLastLevel = level;
                 }
-
+                
                 if(health !== this.playerLastHealth && health < TFT_MAX_HEALTH) {
                     this.emit("playerHealthChange", new PlayerHealthChange(this.playerLastHealth, health));
-                    this.playerLastLevel = level;
+                    this.playerLastHealth = health;
                 }
             }
 

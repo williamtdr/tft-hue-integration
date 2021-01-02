@@ -22,8 +22,8 @@ function registerHandlers() {
                 // todo: something cool w/ lights
                 break;
             case "MinionsSpawning":
-                log.info("Game", `minions spawned at: ${riotEvent.eventTime}`);
-                // todo: when does this fire?
+                log.info("Game", `1-4 reached at: ${riotEvent.eventTime}`);
+                // fires at 1-4.
                 break;
             case "ChampionKill":
                 log.info("Game", `champion killed.`);
@@ -32,14 +32,26 @@ function registerHandlers() {
         }
     });
 
+    tft.on("gameTime", gameTime => {
+        // todo
+        //log.info("Game", "game time: " + gameTime);
+    });
+
     tft.on("playerLevelUp", playerLevelUp => {
         // todo: make lights blue
+
+        if(playerLevelUp.oldLevel === 0)
+            return; // we're just loading in
+
         log.info("Game", `player has leveled up: ${playerLevelUp.oldLevel} -> ${playerLevelUp.newLevel}`);
     });
 
-    tft.on("playerHealthChange", playerLevelUp => {
+    tft.on("playerHealthChange", playerHealthChange => {
         // todo: make lights blue
-        log.info("Game", `player has new health value: ${playerLevelUp.oldHealth} -> ${playerLevelUp.newHealth}`);
+        if(playerHealthChange.oldHealth === 0)
+            return; // we're just loading in
+
+        log.info("Game", `player has new health value: ${playerHealthChange.oldHealth} -> ${playerHealthChange.newHealth}`);
     });
 
     tft.on("expired", () => {
