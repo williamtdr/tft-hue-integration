@@ -17,7 +17,7 @@ const LOCAL_CLIENT_API_BASE = 'https://127.0.0.1:2999/';
 // how often to refresh info when game is running
 const GAME_INFO_REALTIME_MS = 50;
 // how often to check if game is running
-const GAME_INFO_WAITING_MS = 10 * 1000;
+const GAME_INFO_WAITING_MS = 2 * 1000;
 // how often to wait for response body from live game data server
 // bc sometimes times out when it's offline
 const TIMEOUT_CLIENT_API_MS = 1000;
@@ -83,7 +83,7 @@ export default class RealtimeTftMonitor extends events.EventEmitter {
                         this.pastGameEvents.push(identifier);
                         
                         // don't emit this event on the own player's death.
-                        if(riotEvent.eventName === "ChampionKill" && event.VictimName !== summonerName)
+                        if(!(riotEvent.eventName === "ChampionKill" && event.VictimName === summonerName))
                             this.emit('RiotEvent', riotEvent);
                     }
                 }

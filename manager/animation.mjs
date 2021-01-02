@@ -34,13 +34,13 @@ export class AnimationManager {
 
         // newer animation should be strictly higher priority. if current is running
         // of same priority, the current one gets to play.
-        if(this.curPriority <= priority) {
+        if(this.curPriority != null && this.curPriority <= priority) {
             log.info("Animations", `not executing because animation ${this.curName} with priority ${this.curPriority} is still running.`);
 
             return false;
         }
 
-        if(this.curPriority && ATTEMPT_MID_ANIMATION_TRANSITION) {
+        if(this.curPriority != null && ATTEMPT_MID_ANIMATION_TRANSITION) {
             log.info("Animations", `newer priority is higher (${priority}) than existing animation ${this.curPriority} (${this.curPriority}.`);
             log.info("Animations", `cancelling and switching.`);
 

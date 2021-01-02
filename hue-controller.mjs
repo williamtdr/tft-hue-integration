@@ -2,7 +2,7 @@ import nodeHue from 'node-hue-api';
 import fs from 'fs';
 import events from 'events';
 import log from './util/log.mjs';
-import {ANIMATION_PRI_HIGH, ANIMATION_PRI_LOW, AnimationManager} from './manager/animation.mjs';
+import {ANIMATION_PRI_HIGH, ANIMATION_PRI_LOW, ANIMATION_PRI_MED, AnimationManager} from './manager/animation.mjs';
 
 const LightState = nodeHue.v3.lightStates.LightState;
 const GroupLightState = nodeHue.v3.lightStates.GroupLightState;
@@ -128,6 +128,11 @@ export default class HueController extends events.EventEmitter {
     }
 
     setXY(xy, transition = TRANSITION_SLOW) {
+        if(!this.authenticatedApi) {
+            // we're still connecting...
+            return;
+        }
+
         let alertState = new GroupLightState()
             .xy(xy[0], xy[1])
             .transitiontime(transition);
@@ -139,7 +144,7 @@ export default class HueController extends events.EventEmitter {
         const softBlue = [0.2976, 0.2348];
         const time = 12000 + 10000 + 3000; // 12s locked out of center, 10s choosing champ, 3s transition
 
-        await this.animations.lock(
+        await this.animations.run(
             "softHello",
             ANIMATION_PRI_HIGH,
             () => this.setXY(softBlue, TRANSITION_SLOW),
