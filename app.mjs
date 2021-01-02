@@ -11,7 +11,6 @@ function registerHandlers() {
     log.info("Game", `waiting for connection.`);
 
     tft.on("sessionStart", () => {
-        // todo
         log.info("Game", `session started.`);
     });
 
@@ -26,7 +25,7 @@ function registerHandlers() {
         switch(riotEvent.eventName) {
             case "GameStart":
                 log.info("Game", `game started at: ${riotEvent.eventTime}`);
-                // todo: something cool w/ lights
+                hue.softHello();
                 break;
             case "MinionsSpawning":
                 log.info("Game", `1-4 reached at: ${riotEvent.eventTime}`);
@@ -34,7 +33,7 @@ function registerHandlers() {
                 break;
             case "ChampionKill":
                 log.info("Game", `this summoner killed.`);
-                // todo: lights
+                hue.ownDeath();
                 break;
             case "GameEnd":
                 // do we care abt this?
@@ -44,29 +43,31 @@ function registerHandlers() {
 
     tft.on("championDeathEvent", summonerName => {
         log.info("Game", `other summoner killed: ${summonerName}`);
-        // todo: lights
+        hue.otherPlayerDied();
     });
 
     tft.on("gameTime", gameTime => {
         // todo
         //log.info("Game", "game time: " + gameTime);
+
+        if(gameTime > 27 && gameTime < 28)
+            return hue.pulseBeforeRound();
     });
 
     tft.on("playerLevelUp", playerLevelUp => {
-        // todo: make lights blue
-
         if(playerLevelUp.oldLevel === 0)
             return; // we're just loading in
 
         log.info("Game", `player has leveled up: ${playerLevelUp.oldLevel} -> ${playerLevelUp.newLevel}`);
+        hue.levelUp();
     });
 
     tft.on("playerHealthChange", playerHealthChange => {
-        // todo: make lights blue
         if(playerHealthChange.oldHealth === 0)
             return; // we're just loading in
 
         log.info("Game", `player has new health value: ${playerHealthChange.oldHealth} -> ${playerHealthChange.newHealth}`);
+        hue.ow();
     });
 
     tft.on("expired", () => {
@@ -85,3 +86,18 @@ log.info("System", "hello world.");
 
 registerHandlers();
 hue.init();
+
+process.stdin.resume(); // so the program will not close instantly
+
+async function exitHandler(options, exitCode) {
+    await hue.restoreState();
+    if (options.exit) process.exit();
+}
+
+// do something when app is closing
+process.on('exit', exitHandler.bind(null, {}));
+
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+
+process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
