@@ -209,10 +209,10 @@ export default class HueController extends events.EventEmitter {
         await this.animations.run(
             "ow",
             ANIMATION_PRI_LOW,
-            () => this.setBri(-150, TRANSITION_V_FAST),
+            () => this.setBri(-150, TRANSITION_INSTANT),
             () => this.setBri(150, TRANSITION_V_FAST),
             50,
-            200
+            150
         );
     }
 
@@ -255,12 +255,18 @@ export default class HueController extends events.EventEmitter {
         );
     }
 
+    quickRestore() {
+        this.animations.cancelUpcoming();
+        this.setXY(BASE_COLOR, TRANSITION_MIDDLE);
+    }
+
     restoreState() {
         if(this.restoredDefaultState)
            return;
 
+        this.animations.cancelUpcoming();
         this.restoredDefaultState = true;
-        log.info("Hue", "restoring default state...");
+        this.log("restoring default state...");
         return Promise.all(this.lightsInitialState.map(state => this.authenticatedApi.lights.setLightState(state.id, state.state.alertNone())));
     }
 }

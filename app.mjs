@@ -100,6 +100,8 @@ function registerHandlers() {
 
     tft.on("expired", () => {
         log.info("Game", "game has ended, resetting.");
+        // reset lighting
+        hue.quickRestore();
         // recreate event emitter
         tft = new RealtimeTftMonitor();
         registerHandlers();

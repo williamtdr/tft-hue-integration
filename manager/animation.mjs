@@ -71,4 +71,9 @@ export class AnimationManager {
 
         return true;
     }
+
+    cancelUpcoming() {
+        clearTimeout(this.curNextTimeoutId);
+        clearTimeout(this.curCompletionTimeoutId);
+    }
 }
