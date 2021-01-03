@@ -75,5 +75,7 @@ export class AnimationManager {
     cancelUpcoming() {
         clearTimeout(this.curNextTimeoutId);
         clearTimeout(this.curCompletionTimeoutId);
+        this.curPriority = null;
+        this.curName = null;
     }
 }
