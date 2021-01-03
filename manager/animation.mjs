@@ -49,7 +49,7 @@ export class AnimationManager {
         }
 
         if(this.curPriority != null && ATTEMPT_MID_ANIMATION_TRANSITION) {
-            log.info("Animations", `newer priority is higher (${priority}) than existing animation ${this.curPriority} (${this.curPriority}.`);
+            log.info("Animations", `newer priority is higher (${priority}) than existing animation ${this.curName} (${this.curPriority}.`);
             log.info("Animations", `cancelling and switching.`);
 
             clearTimeout(this.curNextTimeoutId);
