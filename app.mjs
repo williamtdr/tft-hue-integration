@@ -9,6 +9,9 @@ function registerHandlers() {
     let summonerName = null;
     let otherPlayersHaveDied = 0;
     let playerisAlive = true;
+    let gameTime = 0;
+    let lastOw = 0;
+    let numOw = 0;
 
     log.info("Game", `waiting for connection.`);
 
@@ -27,7 +30,10 @@ function registerHandlers() {
         switch(riotEvent.eventName) {
             case "GameStart":
                 log.info("Game", `game started at: ${riotEvent.eventTime}`);
-                hue.softHello();
+                
+                // only play animation if this happened recently
+                if(gameTime < parseFloat(riotEvent.eventTime) + 5)
+                    hue.softHello();
                 break;
             case "MinionsSpawning":
                 log.info("Game", `1-4 reached at: ${riotEvent.eventTime}`);
@@ -56,9 +62,10 @@ function registerHandlers() {
             hue.otherPlayerDied();
     });
 
-    tft.on("gameTime", gameTime => {
+    tft.on("gameTime", newGameTime => {
         // todo
         //log.info("Game", "game time: " + gameTime);
+        gameTime = newGameTime;
 
         // if(gameTime > 27 && gameTime < 28)
         //     return hue.pulseBeforeRound();
@@ -77,7 +84,18 @@ function registerHandlers() {
             return; // we're just loading in
 
         log.info("Game", `player has new health value: ${playerHealthChange.oldHealth} -> ${playerHealthChange.newHealth}`);
-        hue.ow();
+        
+        if((Date.now() - lastOw) > 5000) {
+            // reset counter when we haven't taken dmg in a bit
+            numOw = 0;
+        }
+
+        // only play ow animation up to twice at a time
+        if(numOw < 2) {
+            lastOw = Date.now();
+            numOw++;
+            hue.ow();
+        }
     });
 
     tft.on("expired", () => {

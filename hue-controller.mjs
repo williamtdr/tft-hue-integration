@@ -2,7 +2,7 @@ import nodeHue from 'node-hue-api';
 import fs from 'fs';
 import events from 'events';
 import log from './util/log.mjs';
-import {ANIMATION_PRI_HIGH, ANIMATION_PRI_LOW, AnimationManager} from './manager/animation.mjs';
+import {ANIMATION_PRI_HIGH, ANIMATION_PRI_LOW, ANIMATION_PRI_MED, AnimationManager} from './manager/animation.mjs';
 
 const LightState = nodeHue.v3.lightStates.LightState;
 const GroupLightState = nodeHue.v3.lightStates.GroupLightState;
@@ -127,19 +127,37 @@ export default class HueController extends events.EventEmitter {
             });
     }
 
+    setBri(brightness, transition = TRANSITION_SLOW) {
+        if(!this.authenticatedApi) {
+            // we're still connecting...
+            return;
+        }
+
+        let state = new GroupLightState()
+            .incrementBrightness(brightness)
+            .transitiontime(transition);
+
+        return this.authenticatedApi.groups.setGroupState(this.lightGroup.id, state);
+    }
+
     setXY(xy, transition = TRANSITION_SLOW) {
-        let alertState = new GroupLightState()
+        if(!this.authenticatedApi) {
+            // we're still connecting...
+            return;
+        }
+
+        let state = new GroupLightState()
             .xy(xy[0], xy[1])
             .transitiontime(transition);
 
-        return this.authenticatedApi.groups.setGroupState(this.lightGroup.id, alertState);
+        return this.authenticatedApi.groups.setGroupState(this.lightGroup.id, state);
     }
 
     async softHello() {
         const softBlue = [0.2976, 0.2348];
         const time = 12000 + 10000 + 3000; // 12s locked out of center, 10s choosing champ, 3s transition
 
-        await this.animations.lock(
+        await this.animations.run(
             "softHello",
             ANIMATION_PRI_HIGH,
             () => this.setXY(softBlue, TRANSITION_SLOW),
@@ -175,12 +193,12 @@ export default class HueController extends events.EventEmitter {
     async ownDeath() {
         const red = [0.5081, 0.2384];
 
-        await this.animations.lock(
+        await this.animations.run(
             "ownDeath",
             ANIMATION_PRI_HIGH,
-            () => this.setXY(red, TRANSITION_INSTANT),
+            () => this.setXY(red, TRANSITION_MIDDLE),
             () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
-            5000,
+            15000,
             800
         );
     }
@@ -188,12 +206,12 @@ export default class HueController extends events.EventEmitter {
     async ow() {
         const red = [0.479, 0.2748];
 
-        await this.animations.lock(
+        await this.animations.run(
             "ow",
             ANIMATION_PRI_LOW,
-            () => this.setXY(red, TRANSITION_INSTANT),
-            () => this.setXY(BASE_COLOR, TRANSITION_INSTANT),
-            20,
+            () => this.setBri(-150, TRANSITION_V_FAST),
+            () => this.setBri(150, TRANSITION_V_FAST),
+            50,
             200
         );
     }
@@ -201,7 +219,7 @@ export default class HueController extends events.EventEmitter {
     async levelUp() {
         const blue = [0.292, 0.2251];
 
-        await this.animations.lock(
+        await this.animations.run(
             "levelUp",
             ANIMATION_PRI_MED,
             () => this.setXY(blue, TRANSITION_FAST),
@@ -214,7 +232,7 @@ export default class HueController extends events.EventEmitter {
     async otherPlayerDied() {
         const green = [0.2069, 0.6287];
 
-        await this.animations.lock(
+        await this.animations.run(
             "otherPlayerDied",
             ANIMATION_PRI_MED,
             () => this.setXY(green, TRANSITION_MIDDLE),
@@ -227,9 +245,9 @@ export default class HueController extends events.EventEmitter {
     async topFour() {
         const orange = [0.5858, 0.3708];
 
-        await this.animations.lock(
+        await this.animations.run(
             "topFour",
-            ANIMATION_PRI_MED,
+            ANIMATION_PRI_HIGH,
             () => this.setXY(orange, TRANSITION_MIDDLE),
             () => this.setXY(BASE_COLOR, TRANSITION_MIDDLE),
             4000,

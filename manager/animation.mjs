@@ -11,6 +11,8 @@ const ATTEMPT_MID_ANIMATION_TRANSITION = true;
 
 export class AnimationManager {
     constructor() {
+        this.epoch = Date.now();
+
         this.curPriority = null;
         this.curName = null;
         this.curNextTimeoutId = null;
@@ -32,15 +34,21 @@ export class AnimationManager {
     run(name, priority, execute, next, nextDelayMs, completesInMs = TIME_TO_RESET_MS) {
         log.info("Animations", `trying to play animation ${name} with priority ${priority}.`);
 
+        if((Date.now() - this.epoch) < 1000) { // 1s
+            log.info("Animations", `not executing because startup was too recent.`);
+
+            return;
+        }
+
         // newer animation should be strictly higher priority. if current is running
         // of same priority, the current one gets to play.
-        if(this.curPriority <= priority) {
+        if(this.curPriority != null && this.curPriority <= priority) {
             log.info("Animations", `not executing because animation ${this.curName} with priority ${this.curPriority} is still running.`);
 
             return false;
         }
 
-        if(this.curPriority && ATTEMPT_MID_ANIMATION_TRANSITION) {
+        if(this.curPriority != null && ATTEMPT_MID_ANIMATION_TRANSITION) {
             log.info("Animations", `newer priority is higher (${priority}) than existing animation ${this.curPriority} (${this.curPriority}.`);
             log.info("Animations", `cancelling and switching.`);
 
