@@ -212,7 +212,7 @@ export default class HueController extends events.EventEmitter {
             () => this.setBri(-150, TRANSITION_INSTANT),
             () => this.setBri(150, TRANSITION_V_FAST),
             50,
-            150
+            250
         );
     }
 
