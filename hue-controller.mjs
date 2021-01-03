@@ -212,7 +212,7 @@ export default class HueController extends events.EventEmitter {
     }
 
     async otherPlayerDied() {
-        const green = [0.311, 0.4989];
+        const green = [0.2069, 0.6287];
 
         await this.animations.lock(
             "otherPlayerDied",
