@@ -19,6 +19,17 @@ export class AnimationManager {
         this.curCompletionTimeoutId = null;
     }
 
+    registerCompletionHandlers(next, nextDelayMs, completesInMs) {
+        this.curNextTimeoutId = setTimeout(next, nextDelayMs);
+
+        this.curCompletionTimeoutId = setTimeout(() => {
+            log.info("Animations", `animation ${this.curName} complete.`);
+
+            this.curName = null;
+            this.curPriority = null;
+        }, nextDelayMs + completesInMs);
+    }
+
     /**
      * tries to play an animation. mutex to avoid flicker.
      *
@@ -36,6 +47,16 @@ export class AnimationManager {
 
         if((Date.now() - this.epoch) < 1000) { // 1s
             log.info("Animations", `not executing because startup was too recent.`);
+
+            return;
+        }
+
+        if(name === this.curName) {
+            log.info("Animations", `animation ${this.curName} was requested again - extending duration instead.`);
+            
+            clearTimeout(this.curNextTimeoutId);
+            clearTimeout(this.curCompletionTimeoutId);
+            this.registerCompletionHandlers(next, nextDelayMs, completesInMs);
 
             return;
         }
@@ -59,13 +80,7 @@ export class AnimationManager {
         this.curPriority = priority;
         this.curName = name;
         this.curNextTimeoutId = setTimeout(next, nextDelayMs);
-
-        this.curCompletionTimeoutId = setTimeout(() => {
-            log.info("Animations", `animation ${this.curName} complete.`);
-
-            this.curName = null;
-            this.curPriority = null;
-        }, nextDelayMs + completesInMs);
+        this.registerCompletionHandlers(next, nextDelayMs, completesInMs);
 
         execute();
 
