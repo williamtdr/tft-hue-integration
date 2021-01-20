@@ -53,7 +53,7 @@ export class AnimationManager {
 
         if(name === this.curName) {
             log.info("Animations", `animation ${this.curName} was requested again - extending duration instead.`);
-            
+
             clearTimeout(this.curNextTimeoutId);
             clearTimeout(this.curCompletionTimeoutId);
             this.registerCompletionHandlers(next, nextDelayMs, completesInMs);

@@ -20,6 +20,8 @@ const TRANSITION_FAST = 2;
 const TRANSITION_MIDDLE = 4;
 const TRANSITION_SLOW = 8;
 
+const ABS_MAX_BRIGHTNESS = 254;
+
 // a nice warm white
 const BASE_COLOR = [0.4578, 0.41];
 
@@ -30,12 +32,20 @@ export default class HueController extends events.EventEmitter {
         this.authenticatedApi = null;
         this.lightsInitialState = [];
         this.restoredDefaultState = false;
+        this.maxBrightness = ABS_MAX_BRIGHTNESS;
         this.lightGroup = null;
         this.animations = new AnimationManager();
+        this.refreshingStateTimer = setInterval(() => {
+            this.storeInitialState();
+        }, 30 * 1000);
     }
 
     log(msg) {
         log.info("Hue", msg);
+    }
+
+    stopRefreshingState() {
+        clearInterval(this.refreshingStateTimer);
     }
 
     async init() {
@@ -110,6 +120,8 @@ export default class HueController extends events.EventEmitter {
     }
 
     storeInitialState() {
+        this.lightsInitialState = [];
+
         this.authenticatedApi.groups.getRooms()
             .then(groups => {
                 this.lightGroup = groups[0];
@@ -117,13 +129,24 @@ export default class HueController extends events.EventEmitter {
 
         this.authenticatedApi.lights.getAll()
             .then(allLights => {
+                const allBri = [];
+
                 for(let light of allLights) {
                     // record state of the world before we start making modifications
                     this.lightsInitialState.push({
                         id: light.id,
                         state: new LightState().populate(light.state)
                     });
+
+                    allBri.push(light.state.bri);
                 }
+
+                const newBri = Math.round(allBri.reduce((a, b) => a + b) / allBri.length);
+
+                if(newBri != this.maxBrightness)
+                    this.log(`found new relative brightness: ${this.maxBrightness} -> ${newBri}`);
+
+                this.maxBrightness = newBri;
             });
     }
 
@@ -134,7 +157,7 @@ export default class HueController extends events.EventEmitter {
         }
 
         let state = new GroupLightState()
-            .incrementBrightness(brightness)
+            .incrementBrightness(Math.floor(brightness * this.maxBrightness))
             .transitiontime(transition);
 
         return this.authenticatedApi.groups.setGroupState(this.lightGroup.id, state);
@@ -209,8 +232,8 @@ export default class HueController extends events.EventEmitter {
         await this.animations.run(
             "ow",
             ANIMATION_PRI_LOW,
-            () => this.setBri(-150, TRANSITION_INSTANT),
-            () => this.setBri(150, TRANSITION_V_FAST),
+            () => this.setBri(-150 / ABS_MAX_BRIGHTNESS, TRANSITION_INSTANT),
+            () => this.setBri(150 / ABS_MAX_BRIGHTNESS, TRANSITION_V_FAST),
             50,
             250
         );

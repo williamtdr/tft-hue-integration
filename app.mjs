@@ -30,6 +30,7 @@ function registerHandlers() {
         switch(riotEvent.eventName) {
             case "GameStart":
                 log.info("Game", `game started at: ${riotEvent.eventTime}`);
+                hue.stopRefreshingState();
                 
                 // only play animation if this happened recently
                 if(gameTime < parseFloat(riotEvent.eventTime) + 5)
